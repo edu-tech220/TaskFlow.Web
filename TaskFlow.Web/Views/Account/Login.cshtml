@@ -1,0 +1,44 @@
+@model LoginViewModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Iniciar sesión";
+}
+
+<h1 class="mb-1">Bienvenido de vuelta</h1>
+<p class="text-muted mb-4">Inicia sesión para ver tu progreso de hoy.</p>
+
+<form asp-action="Login" method="post" novalidate>
+    <input type="hidden" asp-for="ReturnUrl" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger tf-alert mb-3 empty-hide"></div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <div class="input-icon">
+            <i class="bi bi-envelope"></i>
+            <input asp-for="Email" class="form-control form-control-lg" placeholder="tu@correo.com" autocomplete="email" autofocus />
+        </div>
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label"></label>
+        <div class="input-icon">
+            <i class="bi bi-lock"></i>
+            <input asp-for="Password" class="form-control form-control-lg" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-4">
+        <input asp-for="RememberMe" class="form-check-input" />
+        <label asp-for="RememberMe" class="form-check-label"></label>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg w-100">Entrar <i class="bi bi-arrow-right ms-1"></i></button>
+</form>
+
+<p class="text-center text-muted mt-4 mb-0">
+    ¿No tienes cuenta? <a asp-action="Register" class="fw-semibold">Crear una cuenta</a>
+</p>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

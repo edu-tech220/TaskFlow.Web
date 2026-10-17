@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+    <partial name="_Head" />
+</head>
+<body>
+    <div class="tf-auth">
+        <section class="tf-auth-art d-flex">
+            <div class="tf-brand p-0"><span class="tf-logo"><i class="bi bi-check2-all"></i></span> TaskFlow</div>
+
+            <div>
+                <h2>Construye hábitos,<br />un día a la vez.</h2>
+                <p class="opacity-75 mt-3 mb-4" style="max-width: 30rem">
+                    Programa tus actividades, registra lo que cumples y mira tu progreso en un calendario que no miente.
+                </p>
+                <div class="tf-auth-feature"><i class="bi bi-calendar-check"></i><div><strong>Horarios versionados</strong><div class="opacity-75 small">Cambia tu rutina sin reescribir tu historial.</div></div></div>
+                <div class="tf-auth-feature"><i class="bi bi-cup-hot"></i><div><strong>Días de descanso</strong><div class="opacity-75 small">Con límite mensual para no hacerte trampa.</div></div></div>
+                <div class="tf-auth-feature"><i class="bi bi-graph-up-arrow"></i><div><strong>Rachas y métricas</strong><div class="opacity-75 small">Tu cumplimiento del mes de un vistazo.</div></div></div>
+
+                <div class="tf-auth-mock" aria-hidden="true">
+                    @* 4 semanas de ejemplo *@
+                    @{ var pattern = "ggogbggggoggbgggggggogggbggg"; }
+                    @foreach (var c in pattern)
+                    {
+                        <span class="@(c == 'g' ? "g" : c == 'o' ? "o" : c == 'b' ? "b" : "")"></span>
+                    }
+                </div>
+            </div>
+
+            <div class="small opacity-50">© @DateTime.Now.Year TaskFlow</div>
+        </section>
+
+        <section class="tf-auth-form">
+            <div class="tf-auth-card fade-up">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="tf-brand p-0 d-lg-none" style="color: var(--tf-text)"><span class="tf-logo"><i class="bi bi-check2-all"></i></span> TaskFlow</div>
+                    <button class="tf-icon-btn ms-auto" type="button" data-theme-toggle title="Cambiar tema" aria-label="Cambiar tema">
+                        <i data-theme-icon class="bi bi-moon-stars"></i>
+                    </button>
+                </div>
+
+                @if (TempData["Error"] is string error)
+                {
+                    <div class="alert alert-danger tf-alert"><i class="bi bi-exclamation-triangle-fill"></i><div>@error</div></div>
+                }
+
+                @RenderBody()
+            </div>
+        </section>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,12 +1,15 @@
 @model ActivityFormViewModel
 @{
     ViewData["Title"] = "Nueva actividad";
+    ViewData["Subtitle"] = "Define qué, cuándo y a qué hora";
 }
 
-<h1 class="h3 mb-3">Nueva actividad</h1>
-
-<form asp-action="Create" method="post" style="max-width: 48rem">
+<form asp-action="Create" method="post" style="max-width: 52rem" class="fade-up">
     <partial name="_ActivityForm" model="Model" />
-    <button type="submit" class="btn btn-primary">Crear</button>
-    <a class="btn btn-link" asp-action="Index">Cancelar</a>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Crear actividad</button>
+        <a class="btn btn-soft" asp-action="Index">Cancelar</a>
+    </div>
 </form>
+
+@section Scripts { <partial name="_ActivityFormScripts" /> }

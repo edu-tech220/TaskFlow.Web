@@ -62,6 +62,31 @@ public sealed class TaskFlowApiClient(HttpClient http)
     public Task<ApiResult<RestDayLimitDto>> SetRestDayLimitAsync(int year, int month, int maxRestDays, CancellationToken ct) =>
         SendAsync<RestDayLimitDto>(HttpMethod.Put, $"api/rest-day-limits/{year}/{month}", new { maxRestDays }, ct);
 
+    // ---------- Cuenta ----------
+
+    public Task<ApiResult<AuthResponseDto>> LoginAsync(string email, string password, CancellationToken ct) =>
+        SendAsync<AuthResponseDto>(HttpMethod.Post, "api/auth/login", new { email, password }, ct);
+
+    public Task<ApiResult<AuthResponseDto>> RegisterAsync(string email, string displayName, string password, CancellationToken ct) =>
+        SendAsync<AuthResponseDto>(HttpMethod.Post, "api/auth/register", new { email, displayName, password }, ct);
+
+    public Task<ApiResult<UserDto>> GetMeAsync(CancellationToken ct) =>
+        SendAsync<UserDto>(HttpMethod.Get, "api/auth/me", null, ct);
+
+    public Task<ApiResult<UserDto>> UpdateProfileAsync(string displayName, CancellationToken ct) =>
+        SendAsync<UserDto>(HttpMethod.Put, "api/auth/me", new { displayName }, ct);
+
+    public Task<ApiResult<object>> ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken ct) =>
+        SendAsync<object>(HttpMethod.Put, "api/auth/me/password", new { currentPassword, newPassword }, ct);
+
+    // ---------- Administración (solo Admin) ----------
+
+    public Task<ApiResult<List<AdminUserDto>>> GetUsersAsync(CancellationToken ct) =>
+        SendAsync<List<AdminUserDto>>(HttpMethod.Get, "api/users", null, ct);
+
+    public Task<ApiResult<AdminUserDto>> UpdateUserAsync(int id, UserRole role, bool isActive, CancellationToken ct) =>
+        SendAsync<AdminUserDto>(HttpMethod.Put, $"api/users/{id}", new { role, isActive }, ct);
+
     // ---------- Infraestructura ----------
 
     private async Task<ApiResult<T>> SendAsync<T>(HttpMethod method, string url, object? body, CancellationToken ct)

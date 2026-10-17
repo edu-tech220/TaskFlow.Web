@@ -1,42 +1,43 @@
 @model ActivityFormViewModel
 @{
     ViewData["Title"] = "Editar actividad";
+    ViewData["Subtitle"] = Model.Name;
 }
 
-<h1 class="h3 mb-3">Editar actividad</h1>
+<div class="row g-4">
+    <div class="col-xl-8">
+        <form asp-action="Edit" asp-route-id="@Model.Id" method="post" class="fade-up">
+            <partial name="_ActivityForm" model="Model" />
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                <a class="btn btn-soft" asp-action="Index">Cancelar</a>
+            </div>
+        </form>
+    </div>
 
-<form asp-action="Edit" asp-route-id="@Model.Id" method="post" style="max-width: 48rem">
-    <partial name="_ActivityForm" model="Model" />
-    <button type="submit" class="btn btn-primary">Guardar</button>
-    <a class="btn btn-link" asp-action="Index">Cancelar</a>
-</form>
+    @if (Model.Versions.Count > 0)
+    {
+        <div class="col-xl-4">
+            <div class="tf-card tf-card-body fade-up">
+                <h3 class="tf-card-title"><i class="bi bi-clock-history text-primary"></i> Historial de horarios</h3>
+                @foreach (var v in Model.Versions)
+                {
+                    <div class="border-start border-3 ps-3 pb-3 mb-1" style="border-color: @(v.EffectiveTo is null ? "var(--tf-primary)" : "var(--tf-border)") !important">
+                        <div class="small text-muted">
+                            @Display.ShortDate(v.EffectiveFrom) → @(v.EffectiveTo is { } to ? Display.ShortDate(to) : "sin fin")
+                        </div>
+                        <div class="tf-time small">@Display.Time(v.StartTime) – @Display.Time(v.EndTime)</div>
+                        <div class="tf-days mt-1">
+                            @foreach (var d in Display.WeekMondayFirst)
+                            {
+                                <span class="tf-day @(v.Days.Contains(d) ? "on" : "")" style="width:22px;height:22px;font-size:.65rem">@Display.DayLetter(d)</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
 
-@if (Model.Versions.Count > 0)
-{
-    <h2 class="h5 mt-5">Historial de horarios</h2>
-    <table class="table table-sm" style="max-width: 48rem">
-        <thead><tr><th>Desde</th><th>Hasta</th><th>Horario</th><th>Días</th></tr></thead>
-        <tbody>
-            @foreach (var v in Model.Versions)
-            {
-                <tr>
-                    <td>@v.EffectiveFrom.ToString("yyyy-MM-dd")</td>
-                    <td>@(v.EffectiveTo?.ToString("yyyy-MM-dd") ?? "—")</td>
-                    <td>@Display.Time(v.StartTime)–@Display.Time(v.EndTime)</td>
-                    <td>@Display.Days(v.Days)</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-
-@section Scripts {
-    <script>
-        // Habilita los campos de horario solo si se va a cambiar (fieldset deshabilitado = no se envía).
-        const toggle = document.getElementById('changeSchedule');
-        const fields = document.getElementById('scheduleFields');
-        const sync = () => fields.disabled = !toggle.checked;
-        toggle.addEventListener('change', sync);
-        sync();
-    </script>
-}
+@section Scripts { <partial name="_ActivityFormScripts" /> }

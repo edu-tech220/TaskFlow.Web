@@ -1,0 +1,93 @@
+@model List<AdminUserDto>
+@{
+    ViewData["Title"] = "Usuarios";
+    ViewData["Subtitle"] = $"{Model.Count} registrados · {Model.Count(u => u.Role == UserRole.Admin)} administradores";
+    var me = User.Id();
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="tf-card tf-card-body tf-stat fade-up">
+            <div class="tf-stat-icon bg-soft-primary"><i class="bi bi-people"></i></div>
+            <div><div class="tf-stat-value">@Model.Count</div><div class="tf-stat-label">Usuarios</div></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="tf-card tf-card-body tf-stat fade-up">
+            <div class="tf-stat-icon bg-soft-success"><i class="bi bi-person-check"></i></div>
+            <div><div class="tf-stat-value">@Model.Count(u => u.IsActive)</div><div class="tf-stat-label">Activos</div></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="tf-card tf-card-body tf-stat fade-up">
+            <div class="tf-stat-icon bg-soft-danger"><i class="bi bi-person-slash"></i></div>
+            <div><div class="tf-stat-value">@Model.Count(u => !u.IsActive)</div><div class="tf-stat-label">Desactivados</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="tf-card fade-up">
+    <div class="table-responsive">
+        <table class="table tf-table align-middle">
+            <thead>
+                <tr><th>Usuario</th><th>Rol</th><th>Estado</th><th class="text-center">Actividades</th><th>Último acceso</th><th class="text-end">Acciones</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model)
+                {
+                    var isMe = u.Id == me;
+                    <tr class="@(u.IsActive ? "" : "opacity-50")">
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="tf-avatar" style="width:34px;height:34px;font-size:.75rem">@Display.Initials(u.DisplayName)</div>
+                                <div>
+                                    <div class="fw-semibold">@u.DisplayName @if (isMe) { <span class="chip chip-primary ms-1" style="font-size:.65rem">Tú</span> }</div>
+                                    <div class="small text-muted">@u.Email</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="chip @(u.Role == UserRole.Admin ? "chip-primary" : "chip-muted")">
+                                <i class="bi @(u.Role == UserRole.Admin ? "bi-shield-check" : "bi-person")"></i> @(u.Role == UserRole.Admin ? "Admin" : "Usuario")
+                            </span>
+                        </td>
+                        <td>
+                            @if (u.IsActive) { <span class="chip chip-success">Activo</span> }
+                            else { <span class="chip chip-danger">Desactivado</span> }
+                        </td>
+                        <td class="text-center fw-semibold">@u.ActivityCount</td>
+                        <td class="small text-muted">@(u.LastLoginAt?.ToLocalTime().ToString("d MMM, HH:mm", Display.Culture) ?? "—")</td>
+                        <td class="text-end">
+                            @if (isMe)
+                            {
+                                <span class="small text-muted">—</span>
+                            }
+                            else
+                            {
+                                <div class="d-inline-flex gap-1">
+                                    <form asp-action="UpdateUser" method="post">
+                                        <input type="hidden" name="id" value="@u.Id" />
+                                        <input type="hidden" name="role" value="@(u.Role == UserRole.Admin ? "User" : "Admin")" />
+                                        <input type="hidden" name="isActive" value="@u.IsActive.ToString().ToLowerInvariant()" />
+                                        <button class="btn btn-soft btn-sm" title="@(u.Role == UserRole.Admin ? "Quitar admin" : "Hacer admin")">
+                                            <i class="bi @(u.Role == UserRole.Admin ? "bi-shield-minus" : "bi-shield-plus")"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-action="UpdateUser" method="post"
+                                          data-confirm="@(u.IsActive ? $"¿Desactivar a {u.DisplayName}? No podrá iniciar sesión." : $"¿Reactivar a {u.DisplayName}?")">
+                                        <input type="hidden" name="id" value="@u.Id" />
+                                        <input type="hidden" name="role" value="@u.Role" />
+                                        <input type="hidden" name="isActive" value="@((!u.IsActive).ToString().ToLowerInvariant())" />
+                                        <button class="btn btn-sm @(u.IsActive ? "btn-soft-danger" : "btn-soft-success")" title="@(u.IsActive ? "Desactivar" : "Reactivar")">
+                                            <i class="bi @(u.IsActive ? "bi-person-slash" : "bi-person-check")"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

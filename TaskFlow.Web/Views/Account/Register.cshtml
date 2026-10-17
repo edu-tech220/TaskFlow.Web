@@ -1,0 +1,52 @@
+@model RegisterViewModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Crear cuenta";
+}
+
+<h1 class="mb-1">Crea tu cuenta</h1>
+<p class="text-muted mb-4">Toma menos de un minuto.</p>
+
+<form asp-action="Register" method="post" novalidate>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger tf-alert mb-3 empty-hide"></div>
+
+    <div class="mb-3">
+        <label asp-for="DisplayName" class="form-label"></label>
+        <div class="input-icon">
+            <i class="bi bi-person"></i>
+            <input asp-for="DisplayName" class="form-control" placeholder="Tu nombre" autocomplete="name" autofocus />
+        </div>
+        <span asp-validation-for="DisplayName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <div class="input-icon">
+            <i class="bi bi-envelope"></i>
+            <input asp-for="Email" class="form-control" placeholder="tu@correo.com" autocomplete="email" />
+        </div>
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6">
+            <label asp-for="Password" class="form-label"></label>
+            <input asp-for="Password" class="form-control" autocomplete="new-password" />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+        <div class="col-sm-6">
+            <label asp-for="ConfirmPassword" class="form-label"></label>
+            <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+        </div>
+        <div class="col-12 form-text mt-1"><i class="bi bi-shield-lock"></i> Mínimo 8 caracteres, con al menos una letra y un número.</div>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg w-100">Crear cuenta</button>
+</form>
+
+<p class="text-center text-muted mt-4 mb-0">
+    ¿Ya tienes cuenta? <a asp-action="Login" class="fw-semibold">Inicia sesión</a>
+</p>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

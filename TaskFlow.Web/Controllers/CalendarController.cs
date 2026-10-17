@@ -39,20 +39,20 @@ public sealed class CalendarController(TaskFlowApiClient api) : Controller
 
     [HttpPost]
     public async Task<IActionResult> Record(
-        int activityId, DateOnly date, DailyRecordStatus status, TimeOnly? actualEndTime, string? notes, CancellationToken ct)
+        int activityId, DateOnly date, DailyRecordStatus status, TimeOnly? actualEndTime, string? notes, string? returnUrl, CancellationToken ct)
     {
         var result = await api.UpsertRecordAsync(activityId, date,
             status, status == DailyRecordStatus.Completed ? actualEndTime : null, notes, ct);
-        Notify(result.Error, status == DailyRecordStatus.Completed ? "Marcada como completada." : "Marcada como no completada.");
-        return RedirectToAction(nameof(Day), new { date = date.ToString("yyyy-MM-dd") });
+        Notify(result.Error, status == DailyRecordStatus.Completed ? "¡Bien! Marcada como completada." : "Marcada como no completada.");
+        return BackTo(returnUrl, date);
     }
 
     [HttpPost]
-    public async Task<IActionResult> DeleteRecord(int activityId, DateOnly date, CancellationToken ct)
+    public async Task<IActionResult> DeleteRecord(int activityId, DateOnly date, string? returnUrl, CancellationToken ct)
     {
         var result = await api.DeleteRecordAsync(activityId, date, ct);
         Notify(result.Error, "Registro eliminado.");
-        return RedirectToAction(nameof(Day), new { date = date.ToString("yyyy-MM-dd") });
+        return BackTo(returnUrl, date);
     }
 
     [HttpPost]
@@ -78,6 +78,12 @@ public sealed class CalendarController(TaskFlowApiClient api) : Controller
         Notify(result.Error, $"Límite de descansos actualizado a {maxRestDays}.");
         return RedirectToAction(nameof(Index), new { year, month });
     }
+
+    // Vuelve a la página de origen si es local (p. ej. el dashboard); si no, al detalle del día.
+    private IActionResult BackTo(string? returnUrl, DateOnly date) =>
+        Url.IsLocalUrl(returnUrl)
+            ? Redirect(returnUrl)
+            : RedirectToAction(nameof(Day), new { date = date.ToString("yyyy-MM-dd") });
 
     private void Notify(string? error, string success)
     {

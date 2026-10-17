@@ -1,0 +1,170 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Inicio";
+    ViewData["Subtitle"] = Display.LongDate(Model.Today);
+    var today = Model.TodayDay;
+    var todayPct = today.ScheduledCount == 0 ? 0 : (int)Math.Round(100.0 * today.CompletedCount / today.ScheduledCount);
+    var (todayLabel, todayCss, todayIcon) = Display.Of(today.Status);
+    var todayIso = Model.Today.ToString("yyyy-MM-dd");
+}
+
+@section TopActions {
+    <a class="btn btn-primary d-none d-sm-inline-flex align-items-center gap-1" asp-controller="Activities" asp-action="Create">
+        <i class="bi bi-plus-lg"></i> Nueva actividad
+    </a>
+}
+
+@* ---------- Hero ---------- *@
+<div class="tf-hero mb-4 fade-up">
+    <div class="d-flex flex-wrap align-items-center gap-4">
+        <div class="flex-grow-1">
+            <div class="tf-hero-sub mb-1">@Model.Greeting,</div>
+            <h2 class="mb-2">@Model.UserName 👋</h2>
+            <div class="tf-hero-sub">
+                @if (today.IsRestDay)
+                {
+                    <span>Hoy es día de descanso. Recarga energía.</span>
+                }
+                else if (today.ScheduledCount == 0)
+                {
+                    <span>No tienes actividades programadas para hoy.</span>
+                }
+                else if (today.CompletedCount == today.ScheduledCount)
+                {
+                    <span>¡Completaste todo lo de hoy! 🎉</span>
+                }
+                else
+                {
+                    <span>Llevas @today.CompletedCount de @today.ScheduledCount actividades de hoy.</span>
+                }
+            </div>
+        </div>
+        <div class="tf-ring" style="--p:@todayPct"><span>@todayPct%</span></div>
+    </div>
+</div>
+
+@* ---------- Métricas ---------- *@
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+        <div class="tf-card tf-card-body tf-stat fade-up">
+            <div class="tf-stat-icon bg-soft-orange"><i class="bi bi-fire"></i></div>
+            <div><div class="tf-stat-value">@Model.Streak</div><div class="tf-stat-label">Días de racha</div></div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="tf-card tf-card-body tf-stat fade-up">
+            <div class="tf-stat-icon bg-soft-success"><i class="bi bi-graph-up-arrow"></i></div>
+            <div><div class="tf-stat-value">@Model.Month.CompletionPercent%</div><div class="tf-stat-label">Cumplimiento del mes</div></div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="tf-card tf-card-body tf-stat fade-up">
+            <div class="tf-stat-icon bg-soft-primary"><i class="bi bi-list-check"></i></div>
+            <div><div class="tf-stat-value">@Model.ActiveActivities</div><div class="tf-stat-label">Actividades activas</div></div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="tf-card tf-card-body tf-stat fade-up">
+            <div class="tf-stat-icon bg-soft-info"><i class="bi bi-cup-hot"></i></div>
+            <div><div class="tf-stat-value">@Model.RestDaysUsed<span class="fs-6 text-muted fw-semibold">/@Model.RestDayLimit</span></div><div class="tf-stat-label">Descansos del mes</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    @* ---------- Hoy ---------- *@
+    <div class="col-xl-7">
+        <div class="tf-card tf-card-body h-100 fade-up">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h3 class="tf-card-title m-0"><i class="bi bi-sun text-warning"></i> Hoy</h3>
+                <span class="st-chip @todayCss"><i class="bi @todayIcon"></i> @todayLabel</span>
+            </div>
+
+            @if (today.Activities.Count == 0)
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-calendar2-check fs-1 d-block mb-2 opacity-50"></i>
+                    Nada programado para hoy.
+                    <div class="mt-3"><a class="btn btn-soft btn-sm" asp-controller="Activities" asp-action="Create">Crear una actividad</a></div>
+                </div>
+            }
+
+            @foreach (var a in today.Activities)
+            {
+                var (label, chip, icon) = Display.Of(a.Status);
+                var done = a.Status == ActivityDayStatus.Completed;
+                <div class="tf-task">
+                    <div class="tf-task-check @(done ? "bg-soft-success" : a.Status == ActivityDayStatus.NotCompleted ? "bg-soft-danger" : "bg-soft-primary")">
+                        <i class="bi @(done ? "bi-check-lg" : a.Status == ActivityDayStatus.NotCompleted ? "bi-x-lg" : "bi-clock")"></i>
+                    </div>
+                    <div class="flex-grow-1 min-w-0">
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <strong class="@(done ? "text-decoration-line-through text-muted" : "")">@a.Name</strong>
+                            <span class="chip @chip"><i class="bi @icon"></i> @label</span>
+                        </div>
+                        <div class="text-muted small mt-1"><i class="bi bi-clock me-1"></i>@Display.Time(a.StartTime) – @Display.Time(a.EndTime)</div>
+                    </div>
+                    @if (!done)
+                    {
+                        <div class="d-flex gap-1">
+                            <form asp-controller="Calendar" asp-action="Record" method="post">
+                                <input type="hidden" name="activityId" value="@a.ActivityId" />
+                                <input type="hidden" name="date" value="@todayIso" />
+                                <input type="hidden" name="status" value="Completed" />
+                                <input type="hidden" name="returnUrl" value="/" />
+                                <button class="btn btn-soft-success btn-sm" title="Marcar como completada"><i class="bi bi-check-lg"></i></button>
+                            </form>
+                            @if (a.Status != ActivityDayStatus.NotCompleted)
+                            {
+                                <form asp-controller="Calendar" asp-action="Record" method="post">
+                                    <input type="hidden" name="activityId" value="@a.ActivityId" />
+                                    <input type="hidden" name="date" value="@todayIso" />
+                                    <input type="hidden" name="status" value="NotCompleted" />
+                                    <input type="hidden" name="returnUrl" value="/" />
+                                    <button class="btn btn-soft-danger btn-sm" title="Marcar como no completada"><i class="bi bi-x-lg"></i></button>
+                                </form>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            <a class="btn btn-link px-0 mt-3" asp-controller="Calendar" asp-action="Day" asp-route-date="@todayIso">Ver detalle del día <i class="bi bi-arrow-right"></i></a>
+        </div>
+    </div>
+
+    @* ---------- Últimos 7 días ---------- *@
+    <div class="col-xl-5">
+        <div class="tf-card tf-card-body h-100 fade-up">
+            <h3 class="tf-card-title"><i class="bi bi-bar-chart text-primary"></i> Últimos 7 días</h3>
+            <div class="tf-week mb-3">
+                @foreach (var d in Model.LastSevenDays)
+                {
+                    var (dl, dcss, _) = Display.Of(d.Status);
+                    var pct = d.ScheduledCount == 0 ? 0 : 100 * d.CompletedCount / d.ScheduledCount;
+                    var color = d.Status switch
+                    {
+                        DayStatus.Completed => "var(--st-completed)",
+                        DayStatus.Partial => "var(--st-partial)",
+                        DayStatus.Failed => "var(--st-failed)",
+                        DayStatus.InProgress => "var(--st-progress)",
+                        DayStatus.RestDay => "var(--st-rest)",
+                        _ => "var(--st-none)"
+                    };
+                    var height = d.Status == DayStatus.RestDay ? 100 : Math.Max(pct, d.ScheduledCount > 0 ? 6 : 0);
+                    <a class="tf-week-col text-decoration-none" asp-controller="Calendar" asp-action="Day" asp-route-date="@d.Date.ToString("yyyy-MM-dd")"
+                       title="@Display.LongDate(d.Date): @dl (@d.CompletedCount/@d.ScheduledCount)">
+                        <div class="tf-week-bar"><div style="height:@height%; background:@color; opacity:@(d.Status == DayStatus.RestDay ? ".35" : "1")"></div></div>
+                        <div class="tf-week-label @(d.Date == Model.Today ? "today" : "")">@Display.DayLetter(d.Date.DayOfWeek)</div>
+                    </a>
+                }
+            </div>
+            <div class="row text-center g-2 small">
+                <div class="col"><div class="fw-bold fs-5" style="color:var(--st-completed)">@Model.Month.CompletedDays</div><div class="text-muted">Días completos</div></div>
+                <div class="col"><div class="fw-bold fs-5" style="color:var(--st-partial)">@Model.Month.PartialDays</div><div class="text-muted">Parciales</div></div>
+                <div class="col"><div class="fw-bold fs-5" style="color:var(--st-failed)">@Model.Month.FailedDays</div><div class="text-muted">Fallidos</div></div>
+            </div>
+            <a class="btn btn-soft w-100 mt-4" asp-controller="Calendar" asp-action="Index"><i class="bi bi-calendar3 me-1"></i> Abrir calendario</a>
+        </div>
+    </div>
+</div>

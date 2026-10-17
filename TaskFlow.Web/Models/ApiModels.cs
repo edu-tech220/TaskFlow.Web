@@ -9,6 +9,8 @@ public enum ActivityDayStatus { Scheduled, Pending, Completed, NotCompleted, Unr
 
 public enum DayStatus { Future, RestDay, NoActivities, Completed, InProgress, Failed, Partial }
 
+public enum UserRole { User = 1, Admin = 2 }
+
 public sealed record ScheduleVersionDto(
     int Id, TimeOnly StartTime, TimeOnly EndTime, IReadOnlyList<DayOfWeek> Days,
     DateOnly EffectiveFrom, DateOnly? EffectiveTo);
@@ -36,6 +38,16 @@ public sealed record DailyRecordDto(
     TimeOnly? ActualEndTime, string? Notes);
 
 public sealed record RestDayLimitDto(int Year, int Month, int MaxRestDays, bool IsDefault, int Used);
+
+public sealed record UserDto(
+    int Id, string Email, string DisplayName, UserRole Role, bool IsActive,
+    DateTime CreatedAt, DateTime? LastLoginAt);
+
+public sealed record AuthResponseDto(string Token, DateTime ExpiresAt, UserDto User);
+
+public sealed record AdminUserDto(
+    int Id, string Email, string DisplayName, UserRole Role, bool IsActive,
+    DateTime CreatedAt, DateTime? LastLoginAt, int ActivityCount);
 
 // Resultado de una llamada: éxito con valor, o mensaje de error ya listo para mostrar.
 public sealed record ApiResult<T>(T? Value, string? Error, IReadOnlyDictionary<string, string[]>? FieldErrors = null)

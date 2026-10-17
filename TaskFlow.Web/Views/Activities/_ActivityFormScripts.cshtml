@@ -1,0 +1,23 @@
+<script>
+    (function () {
+        // Atajos de días: "Entre semana", "Fin de semana", "Todos".
+        const names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        document.querySelectorAll('[data-days]').forEach(link => link.addEventListener('click', e => {
+            e.preventDefault();
+            const wanted = link.dataset.days.split(',').map(n => names[+n]);
+            document.querySelectorAll('input[name="Days"]').forEach(cb => cb.checked = wanted.includes(cb.value));
+        }));
+
+        // En edición: habilita los campos de horario solo si se activa "Cambiar horario".
+        const toggle = document.getElementById('changeSchedule');
+        const fields = document.getElementById('scheduleFields');
+        if (toggle && fields) {
+            const sync = () => {
+                fields.disabled = !toggle.checked;
+                fields.style.opacity = toggle.checked ? '1' : '.5';
+            };
+            toggle.addEventListener('change', sync);
+            sync();
+        }
+    })();
+</script>

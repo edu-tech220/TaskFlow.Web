@@ -1,0 +1,64 @@
+@model ProfileViewModel
+@{
+    ViewData["Title"] = "Mi perfil";
+    ViewData["Subtitle"] = "Tus datos y tu contraseña";
+    var user = Model.User!;
+}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="tf-card tf-card-body text-center h-100 fade-up">
+            <div class="tf-avatar lg mx-auto mb-3">@Display.Initials(user.DisplayName)</div>
+            <h2 class="h5 mb-0">@user.DisplayName</h2>
+            <div class="text-muted small mb-3">@user.Email</div>
+            <span class="chip @(user.Role == UserRole.Admin ? "chip-primary" : "chip-muted")">
+                <i class="bi @(user.Role == UserRole.Admin ? "bi-shield-check" : "bi-person")"></i>
+                @(user.Role == UserRole.Admin ? "Administrador" : "Usuario")
+            </span>
+            <hr class="my-4" />
+            <div class="d-flex justify-content-between small"><span class="text-muted">Miembro desde</span><strong>@user.CreatedAt.ToLocalTime().ToString("d MMM yyyy", Display.Culture)</strong></div>
+            @if (user.LastLoginAt is { } last)
+            {
+                <div class="d-flex justify-content-between small mt-2"><span class="text-muted">Último acceso</span><strong>@last.ToLocalTime().ToString("d MMM, HH:mm", Display.Culture)</strong></div>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="tf-card tf-card-body mb-4 fade-up">
+            <h3 class="tf-card-title"><i class="bi bi-person-lines-fill text-primary"></i> Datos personales</h3>
+            <form asp-action="Profile" method="post" class="row g-3 align-items-end">
+                <div class="col-md-7">
+                    <label asp-for="DisplayName" class="form-label"></label>
+                    <input asp-for="DisplayName" class="form-control" />
+                    <span asp-validation-for="DisplayName" class="text-danger"></span>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">Correo</label>
+                    <input class="form-control" value="@user.Email" disabled />
+                </div>
+                <div class="col-12"><button class="btn btn-primary">Guardar cambios</button></div>
+            </form>
+        </div>
+
+        <div class="tf-card tf-card-body fade-up">
+            <h3 class="tf-card-title"><i class="bi bi-key text-primary"></i> Cambiar contraseña</h3>
+            <form asp-action="ChangePassword" method="post" class="row g-3">
+                <div class="col-12">
+                    <label class="form-label" for="CurrentPassword">Contraseña actual</label>
+                    <input type="password" name="CurrentPassword" id="CurrentPassword" class="form-control" autocomplete="current-password" required />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="NewPassword">Nueva contraseña</label>
+                    <input type="password" name="NewPassword" id="NewPassword" class="form-control" autocomplete="new-password" minlength="8" required />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="ConfirmNewPassword">Confirmar nueva contraseña</label>
+                    <input type="password" name="ConfirmNewPassword" id="ConfirmNewPassword" class="form-control" autocomplete="new-password" minlength="8" required />
+                </div>
+                <div class="col-12 form-text mt-1">Mínimo 8 caracteres, con al menos una letra y un número.</div>
+                <div class="col-12"><button class="btn btn-soft">Actualizar contraseña</button></div>
+            </form>
+        </div>
+    </div>
+</div>
