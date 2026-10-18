@@ -1,0 +1,7 @@
+# Normalize line endings in the repository.
+* text=auto
+
+# Third-party client libraries (Bootstrap, jQuery) are vendored: exclude them from
+# GitHub's language statistics so the repository is reported as C#, not HTML/JS.
+TaskFlow.Web/wwwroot/lib/** linguist-vendored
+*.png binary
