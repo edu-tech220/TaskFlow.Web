@@ -1,71 +1,107 @@
 # TaskFlow.Web
 
-Frontend de **TaskFlow** en ASP.NET Core MVC (Razor + Bootstrap 5.3). Es un cliente independiente: no comparte código con el backend y solo se comunica por HTTP con la API REST.
+[![CI](https://github.com/edu-tech220/TaskFlow.Web/actions/workflows/ci.yml/badge.svg)](https://github.com/edu-tech220/TaskFlow.Web/actions/workflows/ci.yml)
+![.NET](https://img.shields.io/badge/.NET-10-512BD4)
+![ASP.NET Core MVC](https://img.shields.io/badge/ASP.NET%20Core-MVC-512BD4)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-Backend: [edu-tech220/TaskFlow](https://github.com/edu-tech220/TaskFlow)
+Web client for **TaskFlow**, a daily habit tracker, built with **ASP.NET Core MVC** (Razor +
+Bootstrap 5.3). It is an independent application: it shares no code with the backend and talks to
+the REST API only over HTTP.
 
-## Qué incluye
+**Backend API:** [edu-tech220/TaskFlow](https://github.com/edu-tech220/TaskFlow)
 
-- **Login y registro** con diseño de dos paneles. El primer usuario registrado en la API es administrador.
-- **Sidebar** fija en escritorio y deslizable en móvil, con el usuario actual y cierre de sesión.
-- **Modo claro / oscuro**: respeta el del sistema y recuerda la elección.
-- **Dashboard**: saludo, progreso de hoy (anillo), racha de días completos, cumplimiento del mes, actividades activas, descansos usados, actividades de hoy con acciones rápidas y gráfica de los últimos 7 días.
-- **Calendario mensual**: un color por estado del día, barra de avance por día, descansos marcados, resumen del mes y límite de descansos.
-- **Detalle del día**: marcar como completada o no completada en un clic; hora real y nota opcionales; deshacer un registro; marcar o quitar descanso.
-- **Actividades** en tarjetas con sus días (L M X J V S D); alta y edición con selector de días y atajos; cambio de horario versionado con historial; desactivar/reactivar y eliminar.
-- **Mi perfil**: cambiar nombre y contraseña.
-- **Usuarios** (solo administradores): lista con métricas, dar o quitar rol de admin, desactivar o reactivar cuentas.
+![Dashboard](docs/images/dashboard.png)
 
-Los colores y textos se deciden aquí: la API solo devuelve estados.
+> The user interface is in Spanish (es-MX); code and documentation are in English.
 
-## Requisitos
+## Features
 
-- .NET SDK 10
-- La API de TaskFlow corriendo (por defecto en `https://localhost:7256`, perfil `https` del backend)
+- **Sign in / sign up.** The first user registered in the API becomes the administrator.
+- **Dashboard:** today's progress, completion streak, monthly completion rate, today's activities
+  with one-click actions and a last-7-days chart.
+- **Monthly calendar:** one color per day status, per-day progress, rest days and monthly summary.
+- **Day detail:** mark activities as completed or not completed, optional actual end time and note,
+  undo a record, mark or remove a rest day.
+- **Activities:** create and edit with a day picker, versioned schedule changes with history,
+  deactivate/reactivate and delete.
+- **Profile:** change display name and password.
+- **Users (admins only):** promote/demote administrators and deactivate accounts.
+- **Responsive layout** with a sidebar (off-canvas on mobile) and **light/dark mode**.
 
-## Puesta en marcha
+The backend only returns statuses; colors and labels are decided here.
+
+## How the session works
+
+1. Login sends email and password to `POST /api/auth/login` and receives a **JWT**.
+2. The app issues its own **session cookie** (`HttpOnly`, `SameSite=Lax`, encrypted with Data
+   Protection) and stores the JWT **inside** it. The browser never sees the token.
+3. `BearerTokenHandler` (an `HttpClient` `DelegatingHandler`) adds `Authorization: Bearer <token>`
+   to every API call.
+4. If the API returns **401** (expired token or deactivated user), `ApiSessionFilter` signs the user
+   out and redirects to the login page with a message.
+5. The cookie expires at the same time as the JWT.
+
+Every page requires a session (global `AuthorizeFilter`) except login and registration. The users
+section requires the `Admin` role, and the API checks it again.
+
+## Getting started
+
+Requirements: .NET SDK 10 and the [TaskFlow API](https://github.com/edu-tech220/TaskFlow) running
+(by default at `https://localhost:7256`, the API's `https` profile).
 
 ```powershell
 cd TaskFlow.Web
 dotnet run --launch-profile https   # https://localhost:7100
 ```
 
-La URL de la API se configura en `TaskFlow.Web/appsettings.json`:
+The API base URL is configured in `TaskFlow.Web/appsettings.json`:
 
 ```json
 "TaskFlowApi": { "BaseUrl": "https://localhost:7256" }
 ```
 
-También se puede sobrescribir con la variable de entorno `TaskFlowApi__BaseUrl`. Si corres la API con IIS Express, usa su puerto (por ejemplo `https://localhost:44325/`).
+It can be overridden with the `TaskFlowApi__BaseUrl` environment variable (for example, use the IIS
+Express port if you run the API that way).
 
-## Cómo funciona la sesión
+## Design notes
 
-1. El login manda correo y contraseña a `POST /api/auth/login` y recibe un **JWT**.
-2. El frontend crea su propia **cookie de sesión** (`HttpOnly`, `SameSite=Lax`, cifrada con Data Protection) y guarda el JWT **dentro** de ella. El navegador nunca ve el token.
-3. `BearerTokenHandler` (un `DelegatingHandler` del `HttpClient`) agrega `Authorization: Bearer <token>` a cada llamada a la API.
-4. Si la API responde **401** (token vencido o usuario desactivado), `ApiSessionFilter` cierra la sesión y manda al login con un mensaje.
-5. La cookie vence a la misma hora que el JWT.
+- **Post/Redirect/Get:** every form ends in a redirect and the result is shown through TempData, so
+  reloading the page never resubmits a form.
+- **Global antiforgery validation:** every POST requires the token added by the `<form>` tag helpers.
+- **Two-layer validation:** forms validate for quick feedback, but the API is the source of truth and
+  its errors (400/401/409) are shown as returned.
+- **No front-end build step:** Bootstrap lives in `wwwroot/lib`; the Inter font and Bootstrap Icons
+  are loaded from a CDN.
 
-Toda página requiere sesión (filtro global `AuthorizeFilter`) salvo login y registro. La sección de usuarios exige rol `Admin`, y la API lo vuelve a verificar.
-
-## Estructura
+## Project structure
 
 ```
 TaskFlow.Web/
-  Controllers/   HomeController (dashboard), CalendarController (calendario, día, registros, descansos),
-                 ActivitiesController, AccountController (login, registro, perfil), AdminController (usuarios)
-  Models/        ApiModels.cs: copia del contrato JSON de la API
-                 ViewModels.cs: formularios, métricas del dashboard y textos/colores de presentación
-  Services/      TaskFlowApiClient (HttpClient tipado), BearerTokenHandler, ApiSessionFilter
-  Views/         Razor; Shared/_Layout (sidebar) y Shared/_AuthLayout (login/registro)
-  wwwroot/css/   site.css: sistema visual (tokens claro/oscuro, estados, calendario, tarjetas)
-  wwwroot/js/    site.js: cambio de tema y confirmaciones
+  Controllers/   HomeController (dashboard), CalendarController (calendar, day, records, rest days),
+                 ActivitiesController, AccountController (login, register, profile), AdminController (users)
+  Models/        ApiModels.cs: copy of the API JSON contract
+                 ViewModels.cs: forms, dashboard metrics, labels and colors
+  Services/      TaskFlowApiClient (typed HttpClient), BearerTokenHandler, ApiSessionFilter
+  Views/         Razor; Shared/_Layout (sidebar) and Shared/_AuthLayout (login/register)
+  wwwroot/css/   site.css: design tokens (light/dark), statuses, calendar, cards
+  wwwroot/js/    site.js: theme toggle and confirmations
 ```
 
-## Notas de diseño
+## Screenshots
 
-- **Patrón PRG** (Post-Redirect-Get): cada formulario termina en un redirect y el resultado se muestra con TempData, así recargar la página no reenvía el formulario.
-- **Antiforgery global**: todos los POST exigen el token que agregan los tag helpers de `<form>`.
-- **Validación doble**: el formulario valida para dar respuesta rápida, pero la API es la fuente de verdad y sus errores (400/401/409) se muestran tal cual.
-- **Sin dependencias de build**: Bootstrap viene en `wwwroot/lib`; la fuente Inter y Bootstrap Icons se cargan desde CDN.
-- **Cultura es-MX** para nombres de días y meses.
+| Calendar | Day detail |
+|---|---|
+| ![Calendar](docs/images/calendar.png) | ![Day](docs/images/day.png) |
+
+| Activities | Users (admin) |
+|---|---|
+| ![Activities](docs/images/activities.png) | ![Users](docs/images/users.png) |
+
+| Dark mode | Mobile | Login |
+|---|---|---|
+| ![Dark](docs/images/dashboard-dark.png) | ![Mobile](docs/images/mobile.png) | ![Login](docs/images/login.png) |
+
+## License
+
+[MIT](LICENSE)
