@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/.vs/
+**/*.user
+.git/
+.github/
+docs/
+**/.env
+**/appsettings.Development.json
+README.md
+LICENSE
